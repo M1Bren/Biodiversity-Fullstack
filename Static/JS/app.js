@@ -1,29 +1,76 @@
 function buildMetadata(sample) {
-
-  // @TODO: Complete the following function that builds the metadata panel
-
-  // Use `d3.json` to fetch the metadata for a sample
-    // Use d3 to select the panel with id of `#sample-metadata`
+  // Use `d3.json` to fetch the metadata for a sample from flask app
+  let url = `/metadata/${sample}`
+  // Use d3 to select the panel with id of `#sample-metadata`
+  d3.json(url).then(response => {
+    let panelSelect = d3.select('#sample-metadata');
 
     // Use `.html("") to clear any existing metadata
+    panelSelect.html("")
 
     // Use `Object.entries` to add each key and value pair to the panel
-    // Hint: Inside the loop, you will need to use d3 to append new
-    // tags for each key-value in the metadata.
+    Object.defineProperties(response).forEach(([key, value])) => {
+      panelSelect.append("p")
+      .text(`${key}:${value}`);  // tags for each key-value in the metadata.
+    }
 
-    // BONUS: Build the Gauge Chart
+    // Build the Gauge Chart
     // buildGauge(data.WFREQ);
-}
+  })
+
+    
+
+
+};
 
 function buildCharts(sample) {
 
-  // @TODO: Use `d3.json` to fetch the sample data for the plots
+  // Use `d3.json` to fetch the sample data for the plots
+  let url = `/samples/${sample}`;
 
-    // @TODO: Build a Bubble Chart using the sample data
+    // Generate the data for the charts using the response
+    d3.json(url).then(response => {
+      let xValue = response['otu_ids'];
+      let yValue = response['sample_values'];
+      let sizeValue = response['sample_values'];
+      let label = response['otu_labels'];
 
-    // @TODO: Build a Pie Chart
-    // HINT: You will need to use slice() to grab the top 10 sample_values,
-    // otu_ids, and labels (10 each).
+      let trace1 = {
+        x: xValue,
+        y: yValue,
+        mode: 'markers',
+        marker: {
+          size: sizeValue,
+          color: xValue,
+          colorscale: 'Portland',
+          labels: label,
+          type: 'scatter',  // Makes a combo bubble and scatter chart
+          opacity: 0.5
+        }
+      }
+    });
+
+    // Define the specs and build the Bubble Scatter Plot
+    let trace1 = [trace1]    // Specify that trace1 should be in list form
+    
+    let layout = {
+      title: 'Marker Size',
+      xAxis: {title: 'OTU ID'},
+      showlegend: true
+    };
+
+
+    Plotly.newPlot("bubble", trace1, layout)
+
+    // Build a Pie Chart according to specs (Top 10 Samples)
+    let trace2 = [{
+      values: sizeValue.splice(0,10),
+      labels: xValue.splice(0,10),
+      text: yValue.splice(0,10),
+      type: 'pie'
+    }];
+
+    Plotly.newPlot('pie', trace2);
 }
 
 function init() {
